@@ -121,45 +121,135 @@ function renderStep() {
     progress.appendChild(dot);
   });
 
-  const ACCENTS = ["magenta", "blue", "red", "green", "yellow"];
   const optionsEl = document.getElementById("step-options");
   optionsEl.innerHTML = "";
-  step.options.forEach((opt, i) => {
+  step.options.forEach((opt) => {
     const btn = document.createElement("button");
     btn.className = "option-chip";
-    btn.setAttribute("data-accent", ACCENTS[i % ACCENTS.length]);
-    btn.textContent = `${opt.emoji} ${opt.value}`;
+
+    const emojiSpan = document.createElement("span");
+    emojiSpan.className = "option-chip__emoji";
+    emojiSpan.textContent = opt.emoji;
+
+    const labelSpan = document.createElement("span");
+    labelSpan.className = "option-chip__label";
+    labelSpan.textContent = opt.value;
+
+    btn.appendChild(emojiSpan);
+    btn.appendChild(labelSpan);
+
     if (state.answers[step.key] === opt.value) {
       btn.setAttribute("data-selected", "true");
     }
-    btn.addEventListener("click", () => selectOption(step, opt));
+    btn.addEventListener("click", () => selectOption(step, opt, btn));
     optionsEl.appendChild(btn);
   });
 
   document.getElementById("btn-back").style.visibility = state.stepIndex === 0 ? "hidden" : "visible";
 }
 
-function dropIngredient(emoji) {
-  const bowl = document.getElementById("bowl-ingredients");
-  const drop = document.createElement("span");
-  drop.textContent = emoji;
-  drop.style.left = `${36 + Math.random() * 28}%`;
-  drop.style.top = `${42 + Math.random() * 24}%`;
-  bowl.appendChild(drop);
+// 이모지 스티커 → 그릇 인터랙션: bounce → fly → bubble → melt (5단계 공용 컴포넌트)
+const INGREDIENT_FLY_MS = 420;
+const INGREDIENT_BUBBLE_MS = 650;
+const INGREDIENT_MELT_MS = 320;
+
+function shakeBowl(bowlEl) {
+  bowlEl.classList.remove("bowl--shake");
+  void bowlEl.offsetWidth;
+  bowlEl.classList.add("bowl--shake");
+  window.setTimeout(() => bowlEl.classList.remove("bowl--shake"), 400);
 }
 
-function selectOption(step, opt) {
+function spawnBubbles(bowlIngredientsEl, xPct, yPct) {
+  for (let i = 0; i < 3; i++) {
+    const bubble = document.createElement("span");
+    bubble.className = "ingredient-bubble";
+    const size = 6 + Math.random() * 6;
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.left = `calc(${xPct}% + ${Math.random() * 16 - 8}px)`;
+    bubble.style.top = `${yPct}%`;
+    bubble.style.animationDelay = `${i * 0.12}s`;
+    bubble.addEventListener("animationend", () => bubble.remove());
+    bowlIngredientsEl.appendChild(bubble);
+  }
+}
+
+function flyIngredientToBowl(sourceEl, emoji, onArrive) {
+  const bowlIngredients = document.getElementById("bowl-ingredients");
+  const bowl = bowlIngredients.closest(".bowl");
+  const sourceRect = sourceEl.getBoundingClientRect();
+  const bowlRect = bowlIngredients.getBoundingClientRect();
+
+  const xPct = 32 + Math.random() * 36;
+  const yPct = 40 + Math.random() * 6;
+  const startX = sourceRect.left + sourceRect.width / 2;
+  const startY = sourceRect.top + sourceRect.height / 2;
+  const targetX = bowlRect.left + bowlRect.width * (xPct / 100);
+  const targetY = bowlRect.top + bowlRect.height * (yPct / 100);
+  const dx = targetX - startX;
+  const dy = targetY - startY;
+  const arcLift = -(80 + Math.random() * 30);
+
+  const wrapper = document.createElement("span");
+  wrapper.className = "ingredient-fly";
+  wrapper.style.left = `${startX}px`;
+  wrapper.style.top = `${startY}px`;
+
+  // bounce(scale/rotate)는 여기서, 흰 테두리용 filter는 visual에서 — 같은 요소에서
+  // 둘 다 애니메이션하면 브라우저가 매 프레임 filter를 다시 그리며 블러가 생긴다.
+  const bounce = document.createElement("span");
+  bounce.className = "ingredient-fly__bounce";
+
+  const visual = document.createElement("span");
+  visual.className = "ingredient-fly__visual";
+  visual.textContent = emoji;
+
+  bounce.appendChild(visual);
+  wrapper.appendChild(bounce);
+  document.body.appendChild(wrapper);
+
+  const flight = wrapper.animate(
+    [
+      { transform: "translate(0, 0)", offset: 0 },
+      { transform: `translate(${dx * 0.3}px, ${dy * 0.3 + arcLift}px)`, offset: 0.35 },
+      { transform: `translate(${dx}px, ${dy}px)`, offset: 1 }
+    ],
+    { duration: INGREDIENT_FLY_MS, easing: "cubic-bezier(0.34, 1.56, 0.64, 1)", fill: "forwards" }
+  );
+
+  flight.onfinish = () => {
+    shakeBowl(bowl);
+    spawnBubbles(bowlIngredients, xPct, yPct);
+    if (onArrive) onArrive();
+
+    window.setTimeout(() => {
+      bounce.classList.add("is-melting");
+      visual.classList.add("is-melting");
+      window.setTimeout(() => wrapper.remove(), INGREDIENT_MELT_MS);
+    }, INGREDIENT_BUBBLE_MS);
+  };
+}
+
+function selectOption(step, opt, chipEl) {
+  if (state.busy) return;
+  state.busy = true;
+
   state.answers[step.key] = opt.value;
-  dropIngredient(opt.emoji);
+  chipEl.setAttribute("data-selected", "true");
+
+  const emojiEl = chipEl.querySelector(".option-chip__emoji");
+  flyIngredientToBowl(emojiEl, opt.emoji);
 
   window.setTimeout(() => {
+    state.busy = false;
     if (state.stepIndex < STEPS.length - 1) {
       state.stepIndex += 1;
       renderStep();
     } else {
       showComplete();
     }
-  }, 350);
+  }, INGREDIENT_FLY_MS + INGREDIENT_BUBBLE_MS);
 }
 
 function goBack() {

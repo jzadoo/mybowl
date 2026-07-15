@@ -181,8 +181,8 @@ body {
 /* 그릇 */
 .bowl {
   position: relative;
-  width: clamp(190px, 46vw, 280px);
-  height: clamp(190px, 46vw, 280px);
+  width: clamp(220px, 58vw, 340px);
+  height: clamp(220px, 58vw, 340px);
   margin: 0 auto 24px;
   display: flex;
   align-items: center;
@@ -192,8 +192,8 @@ body {
 .bowl__body {
   position: relative;
   z-index: 1;
-  font-size: clamp(120px, 30vw, 168px);
-  line-height: 1;
+  font-size: clamp(160px, 46vw, 260px);
+  line-height: 1.3;
   filter: drop-shadow(0 8px 0 rgba(25, 20, 15, 0.25));
   transition: transform 0.4s ease;
 }
@@ -212,21 +212,91 @@ body {
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  clip-path: circle(30% at 50% 58%);
+  clip-path: ellipse(38% 18% at 50% 41%);
 }
 
-.bowl__ingredients span {
+/* 그릇 살짝 흔들림 */
+.bowl--shake {
+  animation: bowl-shake 0.4s ease;
+}
+
+@keyframes bowl-shake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  25% { transform: translateX(-5px) rotate(-1.5deg); }
+  75% { transform: translateX(5px) rotate(1.5deg); }
+}
+
+/* 보글보글 거품 */
+.ingredient-bubble {
   position: absolute;
-  font-size: clamp(22px, 5.5vw, 30px);
-  animation: drop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 3;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.2));
+  animation: bubble-pop 0.6s ease-out forwards;
 }
 
-@keyframes drop-in {
-  from { transform: translateY(-70px) rotate(-20deg) scale(0.6); opacity: 0; }
-  to { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+@keyframes bubble-pop {
+  0% { transform: translateY(0) scale(0.4); opacity: 0; }
+  30% { opacity: 0.9; }
+  100% { transform: translateY(-28px) scale(1); opacity: 0; }
+}
+
+/* 재료가 그릇으로 날아가는 연출 (fly → bounce → melt) */
+.ingredient-fly {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.ingredient-fly__bounce {
+  display: inline-block;
+  transform: translate(-50%, -50%) scale(1);
+  animation: ingredient-bounce 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes ingredient-bounce {
+  0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  30% { transform: translate(-50%, -50%) scale(1.35) rotate(-6deg); }
+  60% { transform: translate(-50%, -50%) scale(0.85) rotate(4deg); }
+  100% { transform: translate(-50%, -50%) scale(0.6) rotate(0deg); }
+}
+
+.ingredient-fly__bounce.is-melting {
+  animation: ingredient-melt-scale 0.32s ease-in forwards;
+}
+
+@keyframes ingredient-melt-scale {
+  0% { transform: translate(-50%, -50%) scale(0.6); }
+  100% { transform: translate(-50%, -50%) scale(0.1); }
+}
+
+/* filter는 이 요소에 고정 — transform과 같이 애니메이션하면 브라우저가 매 프레임
+   filter를 다시 계산해 스케일되는 동안 흐릿하게 보인다 */
+.ingredient-fly__visual {
+  display: inline-block;
+  font-size: clamp(48px, 12vw, 64px);
+  line-height: 1.3;
+  filter:
+    drop-shadow(0 4px 0 rgba(25, 20, 15, 0.25))
+    drop-shadow(1px 0 0 #fff)
+    drop-shadow(-1px 0 0 #fff)
+    drop-shadow(0 1px 0 #fff)
+    drop-shadow(0 -1px 0 #fff);
+}
+
+.ingredient-fly__visual.is-melting {
+  animation: ingredient-fade 0.32s ease-in forwards;
+}
+
+@keyframes ingredient-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .bowl--complete .bowl__body {
+  font-size: clamp(120px, 34vw, 200px);
   animation: bowl-pulse 1s ease-in-out infinite;
 }
 
@@ -324,38 +394,61 @@ body {
   margin-top: 8px;
 }
 
-/* 선택지 */
+/* 선택지 — 스티커 이모지 */
 .options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 10px 6px;
   justify-content: center;
   width: 100%;
   margin-bottom: 24px;
 }
 
 .option-chip {
-  border: 2px dashed var(--ink);
-  background: var(--cream);
-  border-radius: 999px;
-  padding: clamp(10px, 2.6vw, 13px) clamp(14px, 4vw, 19px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  border-radius: 20px;
+  padding: 10px 6px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.option-chip:active {
+  transform: scale(0.92);
+}
+
+.option-chip__emoji {
+  font-size: clamp(48px, 12vw, 64px);
+  line-height: 1.3;
+  filter:
+    drop-shadow(0 3px 0 rgba(25, 20, 15, 0.22))
+    drop-shadow(1px 0 0 #fff)
+    drop-shadow(-1px 0 0 #fff)
+    drop-shadow(0 1px 0 #fff)
+    drop-shadow(0 -1px 0 #fff);
+  transition: transform 0.15s ease;
+}
+
+.option-chip__label {
   font-family: var(--font-body);
-  font-size: clamp(14px, 3.4vw, 16px);
+  font-size: clamp(12px, 3vw, 14px);
   font-weight: 700;
   color: var(--ink);
-  cursor: pointer;
-  box-shadow: 2px 2px 0 rgba(25, 20, 15, 0.25);
+  opacity: 0.8;
 }
 
 .option-chip[data-selected="true"] {
-  border-style: solid;
+  background: rgba(25, 20, 15, 0.06);
+  box-shadow: inset 0 0 0 2.5px var(--blue);
 }
 
-.option-chip[data-selected="true"][data-accent="magenta"] { background: var(--magenta); color: var(--cream); }
-.option-chip[data-selected="true"][data-accent="blue"] { background: var(--blue); color: var(--cream); }
-.option-chip[data-selected="true"][data-accent="red"] { background: var(--red); color: var(--cream); }
-.option-chip[data-selected="true"][data-accent="green"] { background: var(--green); color: var(--cream); }
-.option-chip[data-selected="true"][data-accent="yellow"] { background: var(--yellow); color: var(--ink); }
+.option-chip[data-selected="true"] .option-chip__emoji {
+  transform: scale(1.1);
+}
 
 /* 결과 카드 — 티켓 스타일 */
 .result-card {
