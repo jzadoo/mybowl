@@ -37,6 +37,12 @@ body {
   justify-content: center;
 }
 
+/* 화면 너비가 카드보다 넓을 때 양 옆 여백도 현재 화면 배경색과 이어지도록 */
+body:has(#screen-landing[data-active="true"]) { background: var(--yellow); }
+body:has(#screen-steps[data-active="true"]) { background: var(--cream); }
+body:has(#screen-complete[data-active="true"]) { background: var(--ink); }
+body:has(#screen-result[data-active="true"]) { background: var(--yellow); }
+
 .sheet {
   width: 100%;
   max-width: min(560px, 96vw);
@@ -47,12 +53,36 @@ body {
   overflow: hidden;
 }
 
-/* 전체 그레인 텍스처 */
-.sheet::after {
-  content: "";
-  position: absolute;
+/* 카드보다 화면이 넓을 때 양 옆 여백을 채우는 별 — 카드(.sheet)가 z-index로 위에 겹쳐 가려주므로
+   카드 안쪽으로 들어간 부분은 자연히 보이지 않는다 */
+.bg-decor {
+  position: fixed;
   inset: 0;
-  z-index: 2;
+  z-index: 0;
+  pointer-events: none;
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .bg-decor {
+    display: block;
+  }
+}
+
+body:has(#screen-complete[data-active="true"]) .bg-decor .deco--star::before {
+  background: var(--yellow);
+}
+
+body:has(#screen-steps[data-active="true"]) .bg-decor .deco--star::before {
+  background: rgba(25, 20, 15, 0.4);
+}
+
+/* 전체 그레인 텍스처 — .sheet 안에서만 끝나면 카드 경계에 이음매가 생기므로 화면 전체에 적용 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
   pointer-events: none;
   opacity: 0.1;
   mix-blend-mode: multiply;
@@ -131,6 +161,10 @@ body {
 
 .screen--ink .deco--star::before {
   background: var(--yellow);
+}
+
+.screen:not(.screen--yellow):not(.screen--ink) .deco--star::before {
+  background: rgba(25, 20, 15, 0.4);
 }
 
 .kicker {
@@ -212,7 +246,7 @@ body {
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  clip-path: ellipse(38% 18% at 50% 41%);
+  clip-path: ellipse(40% 25% at 50% 40%);
 }
 
 /* 그릇 살짝 흔들림 */
@@ -231,14 +265,16 @@ body {
   position: absolute;
   z-index: 3;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.2));
-  animation: bubble-pop 0.6s ease-out forwards;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.25));
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.5);
+  animation: bubble-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes bubble-pop {
-  0% { transform: translateY(0) scale(0.4); opacity: 0; }
-  30% { opacity: 0.9; }
-  100% { transform: translateY(-28px) scale(1); opacity: 0; }
+  0% { transform: translateY(0) scale(0.3); opacity: 0; }
+  25% { opacity: 1; }
+  55% { transform: translateY(-30px) scale(1.25); opacity: 0.9; }
+  100% { transform: translateY(-46px) scale(0.9); opacity: 0; }
 }
 
 /* 재료가 그릇으로 날아가는 연출 (fly → bounce → melt) */

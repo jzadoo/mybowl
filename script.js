@@ -150,7 +150,7 @@ function renderStep() {
 
 // 이모지 스티커 → 그릇 인터랙션: bounce → fly → bubble → melt (5단계 공용 컴포넌트)
 const INGREDIENT_FLY_MS = 420;
-const INGREDIENT_BUBBLE_MS = 650;
+const INGREDIENT_BUBBLE_MS = 750;
 const INGREDIENT_MELT_MS = 320;
 
 function shakeBowl(bowlEl) {
@@ -161,15 +161,15 @@ function shakeBowl(bowlEl) {
 }
 
 function spawnBubbles(bowlIngredientsEl, xPct, yPct) {
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 4; i++) {
     const bubble = document.createElement("span");
     bubble.className = "ingredient-bubble";
-    const size = 6 + Math.random() * 6;
+    const size = 12 + Math.random() * 12;
     bubble.style.width = `${size}px`;
     bubble.style.height = `${size}px`;
-    bubble.style.left = `calc(${xPct}% + ${Math.random() * 16 - 8}px)`;
+    bubble.style.left = `calc(${xPct}% + ${Math.random() * 24 - 12}px)`;
     bubble.style.top = `${yPct}%`;
-    bubble.style.animationDelay = `${i * 0.12}s`;
+    bubble.style.animationDelay = `${i * 0.11}s`;
     bubble.addEventListener("animationend", () => bubble.remove());
     bowlIngredientsEl.appendChild(bubble);
   }
