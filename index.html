@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>오늘의 그릇 — 점메추</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gaegu:wght@400;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="sheet">
+
+  <!-- 랜딩 -->
+  <section class="screen screen--yellow" id="screen-landing" data-active="true">
+    <span class="deco deco--star deco--magenta" style="top:6%;left:8%;transform:rotate(-12deg) scale(0.8);"></span>
+    <span class="deco deco--star deco--blue" style="top:5%;right:10%;transform:rotate(10deg) scale(0.65);"></span>
+    <span class="deco deco--star deco--ink" style="top:22%;right:4%;transform:rotate(18deg) scale(0.5);"></span>
+    <span class="deco deco--star deco--red" style="bottom:20%;right:8%;transform:rotate(-8deg) scale(0.7);"></span>
+    <span class="deco deco--star deco--ink" style="bottom:6%;left:6%;transform:rotate(14deg) scale(0.6);"></span>
+    <span class="deco deco--star deco--magenta" style="bottom:8%;right:32%;transform:rotate(-20deg) scale(0.45);"></span>
+
+    <p class="kicker">오늘의 그릇</p>
+    <h1 class="title">그릇에 담으면<br />완성되는 오늘의 메뉴</h1>
+    <p class="subtitle">기분, 상황, 가격대, 맛, 날씨를 그릇에 담아보세요</p>
+    <div class="bowl bowl--idle">
+      <div class="bowl__ingredients"></div>
+      <div class="bowl__body">🥣</div>
+    </div>
+    <div class="landing__actions">
+      <button class="btn btn--primary" id="btn-solo">혼자 먹기</button>
+      <button class="btn btn--ghost" id="btn-group">같이 먹기</button>
+    </div>
+  </section>
+
+  <!-- 스텝 -->
+  <section class="screen" id="screen-steps">
+    <div class="bowl">
+      <div class="bowl__ingredients" id="bowl-ingredients"></div>
+      <div class="bowl__body">🥣</div>
+    </div>
+    <div class="progress" id="progress"></div>
+    <p class="kicker" id="step-kicker">STEP 1 / 5</p>
+    <h2 class="step-title" id="step-title">오늘 기분이 어때요?</h2>
+    <div class="options" id="step-options"></div>
+    <button class="btn btn--text" id="btn-back">이전으로</button>
+  </section>
+
+  <!-- 완성 연출 -->
+  <section class="screen screen--ink" id="screen-complete">
+    <span class="deco deco--star deco--yellow" style="top:10%;left:10%;transform:rotate(-15deg) scale(0.7);"></span>
+    <span class="deco deco--star deco--blue" style="top:8%;right:8%;transform:rotate(12deg) scale(0.6);"></span>
+    <span class="deco deco--star deco--red" style="bottom:12%;left:14%;transform:rotate(20deg) scale(0.55);"></span>
+    <span class="deco deco--star deco--magenta" style="bottom:10%;right:12%;transform:rotate(-10deg) scale(0.65);"></span>
+
+    <div class="bowl bowl--complete">
+      <div class="bowl__ingredients" id="complete-ingredients"></div>
+      <div class="bowl__body">🍚</div>
+      <div class="sparkle">✨</div>
+    </div>
+    <p class="kicker kicker--light">완성!</p>
+    <h2 class="step-title step-title--light">오늘의 메뉴를 찾는 중...</h2>
+  </section>
+
+  <!-- 결과 -->
+  <section class="screen screen--yellow" id="screen-result">
+    <span class="deco deco--star deco--blue" style="top:6%;left:6%;transform:rotate(-10deg) scale(0.6);"></span>
+    <span class="deco deco--star deco--ink" style="top:8%;right:8%;transform:rotate(16deg) scale(0.5);"></span>
+    <span class="deco deco--star deco--red" style="bottom:8%;left:10%;transform:rotate(12deg) scale(0.55);"></span>
+
+    <p class="kicker">오늘의 추천</p>
+    <div class="result-card" id="result-card">
+      <div class="result-emoji" id="result-emoji">🍲</div>
+      <h2 class="result-name" id="result-name">김치찌개</h2>
+      <p class="result-desc" id="result-desc">얼큰하고 든든한 국민 메뉴</p>
+    </div>
+    <div class="result__actions">
+      <a class="btn btn--primary" id="btn-map" href="#" target="_blank" rel="noopener">내 주변에서 찾아보기</a>
+      <button class="btn btn--ghost" id="btn-retry">다시 담기</button>
+      <button class="btn btn--text" id="btn-restart">처음부터</button>
+    </div>
+  </section>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
