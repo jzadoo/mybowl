@@ -42,6 +42,10 @@ body:has(#screen-landing[data-active="true"]) { background: var(--yellow); }
 body:has(#screen-steps[data-active="true"]) { background: var(--cream); }
 body:has(#screen-complete[data-active="true"]) { background: var(--ink); }
 body:has(#screen-result[data-active="true"]) { background: var(--yellow); }
+body:has(#screen-room-create[data-active="true"]) { background: var(--yellow); }
+body:has(#screen-join[data-active="true"]) { background: var(--yellow); }
+body:has(#screen-waiting[data-active="true"]) { background: var(--ink); }
+body:has(#screen-group-result[data-active="true"]) { background: var(--yellow); }
 
 .sheet {
   width: 100%;
@@ -522,4 +526,57 @@ body::after {
   flex-direction: column;
   gap: 10px;
   width: 100%;
+}
+
+/* 같이 먹기 — 닉네임/방코드 입력 */
+.text-input {
+  width: 100%;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  padding: 14px 18px;
+  font-family: var(--font-body);
+  font-size: clamp(15px, 3.6vw, 17px);
+  color: var(--ink);
+  background: var(--cream);
+  box-shadow: 2px 2px 0 rgba(25, 20, 15, 0.45);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.text-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--blue);
+}
+
+/* 같이 먹기 — 초대 코드 */
+.invite-code {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 8vw, 44px);
+  letter-spacing: 0.15em;
+  color: var(--blue);
+  margin: 0 0 8px;
+}
+
+/* 같이 먹기 — 참여/방생성 오류 문구 */
+.join-error {
+  color: var(--red);
+  font-family: var(--font-body);
+  font-weight: 700;
+  margin: -8px 0 16px;
+}
+
+/* 같이 먹기 — 대기 화면 참여자 목록 */
+.waiting-roster {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.waiting-roster__item {
+  font-family: var(--font-body);
+  font-size: clamp(14px, 3.2vw, 16px);
+  color: var(--yellow);
+  margin: 0;
 }

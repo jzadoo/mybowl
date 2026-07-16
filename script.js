@@ -1,3 +1,27 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
+  collection, onSnapshot, runTransaction, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+// Firebase 콘솔 > 프로젝트 설정 > 내 앱에서 발급받은 config로 교체하세요 (같이 먹기 기능에만 필요, 혼자 먹기는 영향 없음)
+const firebaseConfig = {
+  apiKey: "AIzaSyDSS6ovj5NHKqbCJRPyQKnKwzwQx8nawZg",
+  authDomain: "mybowl-336f0.firebaseapp.com",
+  projectId: "mybowl-336f0",
+  storageBucket: "mybowl-336f0.firebasestorage.app",
+  messagingSenderId: "798009204892",
+  appId: "1:798009204892:web:4b0588be752232d1768d59",
+  measurementId: "G-WZ4B9NQ3T5"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+
+const ROOM_CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const ROOM_EXPIRY_MS = 30 * 60 * 1000;
+const ROOM_PARTICIPANT_COUNTS = [2, 3, 4, 5, 6, 7, 8];
+
 const MENUS = [
   { id: "menu_001", name: "김치찌개", emoji: "🍲", moods: ["위로받고싶음", "든든하게"], situations: ["혼밥", "회식"], price: "8000이하", spicy: "자극적으로", weather: ["추움", "비"], description: "얼큰하고 든든한 국민 메뉴", kakaoSearchKeyword: "김치찌개 맛집" },
   { id: "menu_002", name: "된장찌개", emoji: "🍚", moods: ["위로받고싶음", "그냥그럼"], situations: ["혼밥", "친구랑"], price: "8000이하", spicy: "담백하게", weather: ["추움", "맑음"], description: "구수하고 편안한 집밥 느낌", kakaoSearchKeyword: "된장찌개 맛집" },
@@ -22,10 +46,46 @@ const MENUS = [
   { id: "menu_021", name: "수제버거", emoji: "🍔", moods: ["신남", "그냥그럼"], situations: ["혼밥", "친구랑"], price: "8000이하", spicy: "느끼한거땡김", weather: ["맑음", "더움"], description: "간단하고 든든하게 즐기는 한 끼", kakaoSearchKeyword: "수제버거 맛집" },
   { id: "menu_022", name: "우동", emoji: "🍥", moods: ["위로받고싶음", "그냥그럼"], situations: ["혼밥", "친구랑"], price: "8000이하", spicy: "담백하게", weather: ["추움", "비"], description: "뜨끈한 국물로 편안하게 즐기는 면 요리", kakaoSearchKeyword: "우동 맛집" },
   { id: "menu_023", name: "회", emoji: "🐟", moods: ["신남", "그냥그럼"], situations: ["소개팅데이트", "회식"], price: "만오천이상", spicy: "담백하게", weather: ["맑음", "더움"], description: "신선하고 깔끔한 특별한 한 끼", kakaoSearchKeyword: "회 맛집" },
-  { id: "menu_024", name: "샐러드", emoji: "🥗", moods: ["그냥그럼", "스트레스받음"], situations: ["혼밥", "소개팅데이트"], price: "만원대", spicy: "담백하게", weather: ["더움", "맑음"], description: "가볍고 산뜻하게 즐기는 건강식", kakaoSearchKeyword: "샐러드 맛집" }
+  { id: "menu_024", name: "샐러드", emoji: "🥗", moods: ["그냥그럼", "스트레스받음"], situations: ["혼밥", "소개팅데이트"], price: "만원대", spicy: "담백하게", weather: ["더움", "맑음"], description: "가볍고 산뜻하게 즐기는 건강식", kakaoSearchKeyword: "샐러드 맛집" },
+  { id: "menu_025", name: "순두부찌개", emoji: "🥘", moods: ["위로받고싶음", "든든하게"], situations: ["혼밥", "친구랑"], price: "8000이하", spicy: "자극적으로", weather: ["추움", "비"], description: "얼큰하고 부드러운 순두부의 위로", kakaoSearchKeyword: "순두부찌개 맛집" },
+  { id: "menu_026", name: "갈비탕", emoji: "🍖", moods: ["든든하게", "위로받고싶음"], situations: ["혼밥", "회식"], price: "만원대", spicy: "담백하게", weather: ["추움", "맑음"], description: "진한 육수로 든든하게 채우는 보양식", kakaoSearchKeyword: "갈비탕 맛집" },
+  { id: "menu_027", name: "쭈꾸미볶음", emoji: "🦑", moods: ["스트레스받음", "신남"], situations: ["친구랑", "회식"], price: "만원대", spicy: "자극적으로", weather: ["추움", "비"], description: "매콤한 쭈꾸미로 화끈하게 스트레스 해소", kakaoSearchKeyword: "쭈꾸미볶음 맛집" },
+  { id: "menu_028", name: "감자탕", emoji: "🍖", moods: ["든든하게", "위로받고싶음"], situations: ["회식", "친구랑"], price: "만원대", spicy: "자극적으로", weather: ["추움", "비"], description: "진하고 얼큰한 국물의 든든한 한 끼", kakaoSearchKeyword: "감자탕 맛집" },
+  { id: "menu_029", name: "부대찌개", emoji: "🍲", moods: ["든든하게", "스트레스받음"], situations: ["친구랑", "회식"], price: "만원대", spicy: "자극적으로", weather: ["추움", "비"], description: "얼큰하고 푸짐한 부대찌개 한 그릇", kakaoSearchKeyword: "부대찌개 맛집" },
+  { id: "menu_030", name: "청국장", emoji: "🍚", moods: ["위로받고싶음", "그냥그럼"], situations: ["혼밥", "친구랑"], price: "8000이하", spicy: "담백하게", weather: ["추움", "맑음"], description: "구수하고 건강한 집밥 한 상", kakaoSearchKeyword: "청국장 맛집" },
+  { id: "menu_031", name: "콩나물국밥", emoji: "🍚", moods: ["위로받고싶음", "그냥그럼"], situations: ["혼밥", "친구랑"], price: "8000이하", spicy: "담백하게", weather: ["추움", "비"], description: "해장에 좋은 시원하고 깔끔한 국밥", kakaoSearchKeyword: "콩나물국밥 맛집" },
+  { id: "menu_032", name: "낙지볶음", emoji: "🌶️", moods: ["스트레스받음", "신남"], situations: ["친구랑", "회식"], price: "만원대", spicy: "자극적으로", weather: ["비", "추움"], description: "쫄깃한 낙지와 화끈한 매콤함", kakaoSearchKeyword: "낙지볶음 맛집" },
+  { id: "menu_033", name: "김밥", emoji: "🍙", moods: ["그냥그럼", "든든하게"], situations: ["혼밥", "친구랑"], price: "8000이하", spicy: "담백하게", weather: ["맑음", "더움"], description: "간단하면서 든든한 한 끼 분식", kakaoSearchKeyword: "김밥 맛집" },
+  { id: "menu_034", name: "라멘", emoji: "🍜", moods: ["위로받고싶음", "그냥그럼"], situations: ["혼밥", "친구랑"], price: "만원대", spicy: "느끼한거땡김", weather: ["추움", "비"], description: "진한 돈코츠 국물의 깊은 위로", kakaoSearchKeyword: "라멘 맛집" },
+  { id: "menu_035", name: "규동", emoji: "🍚", moods: ["든든하게", "그냥그럼"], situations: ["혼밥", "친구랑"], price: "8000이하", spicy: "느끼한거땡김", weather: ["맑음", "추움"], description: "달콤짭짤한 소고기와 든든한 한 그릇", kakaoSearchKeyword: "규동 맛집" },
+  { id: "menu_036", name: "초계국수", emoji: "🍜", moods: ["그냥그럼", "신남"], situations: ["친구랑", "소개팅데이트"], price: "만원대", spicy: "담백하게", weather: ["더움", "맑음"], description: "새콤달콤 시원한 여름 별미", kakaoSearchKeyword: "초계국수 맛집" },
+  { id: "menu_037", name: "물회", emoji: "🐟", moods: ["신남", "그냥그럼"], situations: ["친구랑", "소개팅데이트"], price: "만원대", spicy: "자극적으로", weather: ["더움", "맑음"], description: "새콤매콤 시원한 여름 물회 한 그릇", kakaoSearchKeyword: "물회 맛집" },
+  { id: "menu_038", name: "리조또", emoji: "🍚", moods: ["그냥그럼", "신남"], situations: ["소개팅데이트", "친구랑"], price: "만원대", spicy: "느끼한거땡김", weather: ["맑음", "비"], description: "부드럽고 고소한 크리미 리조또", kakaoSearchKeyword: "리조또 맛집" },
+  { id: "menu_039", name: "그라탕", emoji: "🧀", moods: ["든든하게", "위로받고싶음"], situations: ["소개팅데이트", "친구랑"], price: "만원대", spicy: "느끼한거땡김", weather: ["추움", "비"], description: "치즈 듬뿍 든든하고 따뜻한 한 그릇", kakaoSearchKeyword: "그라탕 맛집" },
+  { id: "menu_040", name: "타코", emoji: "🌮", moods: ["신남", "그냥그럼"], situations: ["친구랑", "소개팅데이트"], price: "만원대", spicy: "자극적으로", weather: ["맑음", "더움"], description: "이국적이고 경쾌한 한 끼", kakaoSearchKeyword: "타코 맛집" },
+  { id: "menu_041", name: "쌈밥", emoji: "🥬", moods: ["든든하게", "그냥그럼"], situations: ["혼밥", "친구랑"], price: "만원대", spicy: "담백하게", weather: ["맑음", "더움"], description: "건강하고 든든하게 쌈 싸먹는 한 상", kakaoSearchKeyword: "쌈밥 맛집" },
+  { id: "menu_042", name: "훠궈", emoji: "🍲", moods: ["신남", "스트레스받음"], situations: ["친구랑", "회식"], price: "만오천이상", spicy: "자극적으로", weather: ["추움", "비"], description: "얼큰한 육수에 부글부글 끓여먹는 즐거움", kakaoSearchKeyword: "훠궈 맛집" },
+  { id: "menu_043", name: "양꼬치", emoji: "🍢", moods: ["신남", "든든하게"], situations: ["친구랑", "회식"], price: "만오천이상", spicy: "느끼한거땡김", weather: ["추움", "맑음"], description: "향신료 가득 이국적인 회식 메뉴", kakaoSearchKeyword: "양꼬치 맛집" },
+  { id: "menu_044", name: "딤섬", emoji: "🥟", moods: ["그냥그럼", "신남"], situations: ["소개팅데이트", "친구랑"], price: "만원대", spicy: "담백하게", weather: ["맑음", "비"], description: "정갈하고 담백한 딤섬 한 상", kakaoSearchKeyword: "딤섬 맛집" },
+  { id: "menu_045", name: "한정식", emoji: "🍱", moods: ["든든하게", "위로받고싶음"], situations: ["소개팅데이트", "회식"], price: "만오천이상", spicy: "담백하게", weather: ["맑음", "추움"], description: "정갈하게 차려진 든든한 상차림", kakaoSearchKeyword: "한정식 맛집" },
+  { id: "menu_046", name: "해물찜", emoji: "🦀", moods: ["든든하게", "신남"], situations: ["회식", "소개팅데이트"], price: "만오천이상", spicy: "자극적으로", weather: ["추움", "비"], description: "푸짐한 해물로 즐기는 화끈한 한 상", kakaoSearchKeyword: "해물찜 맛집" },
+  { id: "menu_047", name: "브런치세트", emoji: "🍳", moods: ["그냥그럼", "신남"], situations: ["소개팅데이트", "혼밥"], price: "만원대", spicy: "담백하게", weather: ["맑음", "더움"], description: "여유롭게 즐기는 산뜻한 브런치", kakaoSearchKeyword: "브런치 맛집" },
+  { id: "menu_048", name: "로제떡볶이", emoji: "🍜", moods: ["스트레스받음", "신남"], situations: ["혼밥", "친구랑"], price: "8000이하", spicy: "느끼한거땡김", weather: ["비", "맑음"], description: "매콤달콤 크리미한 로제 소스 분식", kakaoSearchKeyword: "로제떡볶이 맛집" },
+  { id: "menu_049", name: "육회비빔밥", emoji: "🥩", moods: ["신남", "그냥그럼"], situations: ["친구랑", "소개팅데이트"], price: "만원대", spicy: "담백하게", weather: ["더움", "맑음"], description: "신선하고 고급스러운 별미 한 그릇", kakaoSearchKeyword: "육회비빔밥 맛집" }
 ];
 
 const STEPS = [
+  {
+    key: "weather",
+    title: "오늘 날씨는 어때요?",
+    field: "weather",
+    options: [
+      { value: "더움", emoji: "☀️" },
+      { value: "추움", emoji: "❄️" },
+      { value: "비", emoji: "🌧️" },
+      { value: "맑음", emoji: "🌤️" }
+    ]
+  },
   {
     key: "mood",
     title: "오늘 기분이 어때요?",
@@ -68,31 +128,35 @@ const STEPS = [
       { value: "담백하게", emoji: "🍃" },
       { value: "느끼한거땡김", emoji: "🧈" }
     ]
-  },
-  {
-    key: "weather",
-    title: "오늘 날씨는 어때요?",
-    field: "weather",
-    options: [
-      { value: "더움", emoji: "☀️" },
-      { value: "추움", emoji: "❄️" },
-      { value: "비", emoji: "🌧️" },
-      { value: "맑음", emoji: "🌤️" }
-    ]
   }
 ];
 
 const state = {
   stepIndex: 0,
   answers: {},
-  lastMenuId: null
+  lastMenuId: null,
+  mode: "solo",
+  roomId: null,
+  pendingRoomId: null,
+  participantId: null,
+  nickname: null,
+  isHost: false,
+  targetCount: null,
+  roomFormTargetCount: null,
+  participantsCache: [],
+  groupResultReceived: false,
+  unsubscribers: []
 };
 
 const screens = {
   landing: document.getElementById("screen-landing"),
   steps: document.getElementById("screen-steps"),
   complete: document.getElementById("screen-complete"),
-  result: document.getElementById("screen-result")
+  result: document.getElementById("screen-result"),
+  roomCreate: document.getElementById("screen-room-create"),
+  join: document.getElementById("screen-join"),
+  waiting: document.getElementById("screen-waiting"),
+  groupResult: document.getElementById("screen-group-result")
 };
 
 function showScreen(name) {
@@ -246,6 +310,8 @@ function selectOption(step, opt, chipEl) {
     if (state.stepIndex < STEPS.length - 1) {
       state.stepIndex += 1;
       renderStep();
+    } else if (state.mode === "group") {
+      submitGroupAnswers();
     } else {
       showComplete();
     }
@@ -265,29 +331,48 @@ function showComplete() {
   showScreen("complete");
   window.setTimeout(() => {
     const menu = pickMenu();
+    state.lastMenuId = menu.id;
     showResult(menu);
   }, 1200);
 }
 
-function scoreMenu(menu) {
-  const a = state.answers;
+// 가격·맛강도는 명확한 조건이라 가중치를 높게, 기분·상황·날씨는 유사하면 되는 조건이라 낮게 둔다
+const SCORE_WEIGHTS = { mood: 1, situation: 1, price: 2, spicy: 2, weather: 1 };
+
+function scoreMenu(menu, answers = state.answers) {
+  const a = answers;
   let score = 0;
-  if (menu.moods.includes(a.mood)) score += 1;
-  if (menu.situations.includes(a.situation)) score += 1;
-  if (menu.price === a.price) score += 1;
-  if (menu.spicy === a.spicy) score += 1;
-  if (menu.weather.includes(a.weather)) score += 1;
+  if (menu.moods.includes(a.mood)) score += SCORE_WEIGHTS.mood;
+  if (menu.situations.includes(a.situation)) score += SCORE_WEIGHTS.situation;
+  if (menu.price === a.price) score += SCORE_WEIGHTS.price;
+  if (menu.spicy === a.spicy) score += SCORE_WEIGHTS.spicy;
+  if (menu.weather.includes(a.weather)) score += SCORE_WEIGHTS.weather;
   return score;
 }
 
-function pickMenu() {
-  const candidates = MENUS.filter((m) => m.id !== state.lastMenuId);
-  const scored = candidates.map((m) => ({ menu: m, score: scoreMenu(m) }));
+function pickMenu(answers = state.answers, excludeId = state.lastMenuId) {
+  const candidates = MENUS.filter((m) => m.id !== excludeId);
+  const scored = candidates.map((m) => ({ menu: m, score: scoreMenu(m, answers) }));
   const maxScore = Math.max(...scored.map((s) => s.score));
   const best = scored.filter((s) => s.score === maxScore).map((s) => s.menu);
-  const chosen = best[Math.floor(Math.random() * best.length)];
-  state.lastMenuId = chosen.id;
-  return chosen;
+  return best[Math.floor(Math.random() * best.length)];
+}
+
+// 그룹 모드: 참여자 전원의 선택값을 항목별 최빈값(다수결)으로 합쳐 대표 조건을 만든다. 동률은 랜덤.
+function aggregateGroupAnswers(participantAnswersList) {
+  const fields = ["weather", "mood", "situation", "price", "spicy"];
+  const aggregated = {};
+  fields.forEach((field) => {
+    const counts = {};
+    participantAnswersList.forEach((a) => {
+      if (a == null || a[field] == null) return;
+      counts[a[field]] = (counts[a[field]] || 0) + 1;
+    });
+    const maxCount = Math.max(...Object.values(counts));
+    const winners = Object.keys(counts).filter((v) => counts[v] === maxCount);
+    aggregated[field] = winners[Math.floor(Math.random() * winners.length)];
+  });
+  return aggregated;
 }
 
 function showResult(menu) {
@@ -307,10 +392,346 @@ function restart() {
   showScreen("landing");
 }
 
+// ===== 같이 먹기 (그룹 모드) =====
+
+function generateRoomCode() {
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += ROOM_CODE_CHARS[Math.floor(Math.random() * ROOM_CODE_CHARS.length)];
+  }
+  return code;
+}
+
+function inviteLinkFor(roomId) {
+  return `${location.origin}${location.pathname}?room=${roomId}`;
+}
+
+async function dedupeNickname(roomId, baseName) {
+  const snap = await getDocs(collection(db, "rooms", roomId, "participants"));
+  const existingCount = snap.docs.filter((d) => d.data().baseNickname === baseName).length;
+  return existingCount === 0 ? baseName : `${baseName}(${existingCount + 1})`;
+}
+
+async function checkRoomStatus(roomId) {
+  const roomSnap = await getDoc(doc(db, "rooms", roomId));
+  if (!roomSnap.exists()) return { ok: false, reason: "not-found" };
+  const data = roomSnap.data();
+  const lastActivityMs = data.lastActivityAt ? data.lastActivityAt.toMillis() : 0;
+  if (Date.now() - lastActivityMs > ROOM_EXPIRY_MS) return { ok: false, reason: "expired" };
+  const participantsSnap = await getDocs(collection(db, "rooms", roomId, "participants"));
+  if (participantsSnap.size >= data.targetCount) return { ok: false, reason: "full" };
+  return { ok: true, data };
+}
+
+async function createRoom(hostBaseNickname, targetCount) {
+  let roomId = generateRoomCode();
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const existing = await getDoc(doc(db, "rooms", roomId));
+    if (!existing.exists()) break;
+    roomId = generateRoomCode();
+  }
+
+  await setDoc(doc(db, "rooms", roomId), {
+    hostNickname: hostBaseNickname,
+    targetCount,
+    status: "waiting",
+    createdAt: serverTimestamp(),
+    lastActivityAt: serverTimestamp(),
+    groupResult: null
+  });
+
+  const nickname = await dedupeNickname(roomId, hostBaseNickname);
+  const participantRef = await addDoc(collection(db, "rooms", roomId, "participants"), {
+    nickname,
+    baseNickname: hostBaseNickname,
+    isHost: true,
+    joinedAt: serverTimestamp(),
+    submitted: false,
+    submittedAt: null,
+    answers: null
+  });
+
+  state.mode = "group";
+  state.roomId = roomId;
+  state.participantId = participantRef.id;
+  state.nickname = nickname;
+  state.isHost = true;
+  state.targetCount = targetCount;
+
+  return { roomId, nickname };
+}
+
+async function joinRoom(roomId, baseNickname) {
+  await updateDoc(doc(db, "rooms", roomId), { lastActivityAt: serverTimestamp() });
+  const roomSnap = await getDoc(doc(db, "rooms", roomId));
+  const nickname = await dedupeNickname(roomId, baseNickname);
+  const participantRef = await addDoc(collection(db, "rooms", roomId, "participants"), {
+    nickname,
+    baseNickname,
+    isHost: false,
+    joinedAt: serverTimestamp(),
+    submitted: false,
+    submittedAt: null,
+    answers: null
+  });
+
+  state.mode = "group";
+  state.roomId = roomId;
+  state.participantId = participantRef.id;
+  state.nickname = nickname;
+  state.isHost = false;
+  state.targetCount = roomSnap.data().targetCount;
+
+  return { nickname };
+}
+
+function unsubscribeAll() {
+  state.unsubscribers.forEach((unsub) => unsub());
+  state.unsubscribers = [];
+}
+
+function subscribeToRoom(roomId) {
+  unsubscribeAll();
+  state.groupResultReceived = false;
+
+  const participantsUnsub = onSnapshot(collection(db, "rooms", roomId, "participants"), (snap) => {
+    state.participantsCache = snap.docs.map((d) => d.data());
+    if (screens.waiting.hasAttribute("data-active")) renderWaiting();
+  });
+
+  const roomUnsub = onSnapshot(doc(db, "rooms", roomId), (snap) => {
+    const data = snap.data();
+    if (data && data.groupResult) {
+      state.groupResultReceived = true;
+      renderGroupResult(data.groupResult);
+      showScreen("groupResult");
+    }
+  });
+
+  state.unsubscribers.push(participantsUnsub, roomUnsub);
+}
+
+async function maybeComputeGroupResult(roomId, participantDataList) {
+  const aggregatedAnswers = aggregateGroupAnswers(participantDataList.map((p) => p.answers));
+  const menu = pickMenu(aggregatedAnswers, null);
+
+  await runTransaction(db, async (transaction) => {
+    const roomRef = doc(db, "rooms", roomId);
+    const roomSnap = await transaction.get(roomRef);
+    if (roomSnap.data().groupResult) return;
+    transaction.update(roomRef, {
+      status: "completed",
+      groupResult: {
+        menuId: menu.id,
+        name: menu.name,
+        emoji: menu.emoji,
+        description: menu.description,
+        kakaoSearchKeyword: menu.kakaoSearchKeyword,
+        computedAt: serverTimestamp(),
+        aggregatedAnswers
+      }
+    });
+  });
+}
+
+async function submitGroupAnswers() {
+  showScreen("complete");
+
+  await updateDoc(doc(db, "rooms", state.roomId, "participants", state.participantId), {
+    answers: state.answers,
+    submitted: true,
+    submittedAt: serverTimestamp()
+  });
+  await updateDoc(doc(db, "rooms", state.roomId), { lastActivityAt: serverTimestamp() });
+
+  const participantsSnap = await getDocs(collection(db, "rooms", state.roomId, "participants"));
+  const participantDataList = participantsSnap.docs.map((d) => d.data());
+  const submittedCount = participantDataList.filter((p) => p.submitted).length;
+  if (submittedCount >= state.targetCount) {
+    maybeComputeGroupResult(state.roomId, participantDataList);
+  }
+
+  window.setTimeout(() => {
+    // 이 사이 그룹 결과가 이미 계산되어 onSnapshot이 화면을 전환했을 수 있다 — 그 경우 되돌리지 않는다
+    if (state.groupResultReceived) return;
+    showScreen("waiting");
+    renderWaiting();
+  }, 1200);
+}
+
+function startGroupSteps() {
+  state.stepIndex = 0;
+  state.answers = {};
+  document.getElementById("bowl-ingredients").innerHTML = "";
+  showScreen("steps");
+  renderStep();
+}
+
+function renderRoomCountOptions() {
+  const optionsEl = document.getElementById("room-count-options");
+  optionsEl.innerHTML = "";
+  ROOM_PARTICIPANT_COUNTS.forEach((count) => {
+    const btn = document.createElement("button");
+    btn.className = "option-chip";
+    btn.type = "button";
+
+    const labelSpan = document.createElement("span");
+    labelSpan.className = "option-chip__label";
+    labelSpan.textContent = `${count}명`;
+    btn.appendChild(labelSpan);
+
+    if (state.roomFormTargetCount === count) btn.setAttribute("data-selected", "true");
+    btn.addEventListener("click", () => {
+      state.roomFormTargetCount = count;
+      renderRoomCountOptions();
+    });
+    optionsEl.appendChild(btn);
+  });
+}
+
+function showRoomCreateError(message) {
+  const errorEl = document.getElementById("room-create-error");
+  errorEl.textContent = message;
+  errorEl.style.display = "block";
+}
+
+function enterRoomCreateScreen() {
+  document.getElementById("room-nickname").value = "";
+  document.getElementById("room-create-error").style.display = "none";
+  document.getElementById("room-create-form").hidden = false;
+  document.getElementById("room-create-invite").hidden = true;
+  state.roomFormTargetCount = ROOM_PARTICIPANT_COUNTS[0];
+  renderRoomCountOptions();
+  showScreen("roomCreate");
+}
+
+function showJoinError(reason) {
+  const messages = {
+    "not-found": "방을 찾을 수 없어요. 코드를 다시 확인해주세요.",
+    expired: "방이 만료됐어요. 새로 만들어주세요.",
+    full: "이미 인원이 다 찼어요."
+  };
+  const errorEl = document.getElementById("join-error");
+  errorEl.textContent = messages[reason] || "알 수 없는 오류가 발생했어요.";
+  errorEl.style.display = "block";
+}
+
+async function enterJoinFlow(roomId) {
+  document.getElementById("join-nickname").value = "";
+  document.getElementById("join-error").style.display = "none";
+  document.getElementById("join-title").textContent = "방에 참여해요";
+  state.pendingRoomId = roomId;
+  showScreen("join");
+
+  const status = await checkRoomStatus(roomId);
+  if (!status.ok) {
+    showJoinError(status.reason);
+    return;
+  }
+  document.getElementById("join-title").textContent = `${status.data.hostNickname}님의 방에 참여해요`;
+}
+
+function renderWaiting() {
+  const participants = state.participantsCache || [];
+  const submittedCount = participants.filter((p) => p.submitted).length;
+
+  document.getElementById("waiting-kicker").textContent = `${submittedCount}/${state.targetCount}명 담는 중`;
+
+  const progressEl = document.getElementById("waiting-progress");
+  progressEl.innerHTML = "";
+  for (let i = 0; i < state.targetCount; i++) {
+    const dot = document.createElement("span");
+    if (i < submittedCount) dot.setAttribute("data-done", "true");
+    progressEl.appendChild(dot);
+  }
+
+  const rosterEl = document.getElementById("waiting-roster");
+  rosterEl.innerHTML = "";
+  participants.forEach((p) => {
+    const item = document.createElement("p");
+    item.className = "waiting-roster__item";
+    item.textContent = `${p.submitted ? "✅" : "⏳"} ${p.nickname}`;
+    rosterEl.appendChild(item);
+  });
+}
+
+function renderGroupResult(groupResult) {
+  document.getElementById("group-result-emoji").textContent = groupResult.emoji;
+  document.getElementById("group-result-name").textContent = groupResult.name;
+  document.getElementById("group-result-desc").textContent = groupResult.description;
+  document.getElementById("btn-group-map").href = `https://map.kakao.com/link/search/${encodeURIComponent(groupResult.kakaoSearchKeyword)}`;
+}
+
+function exitGroupModeToLanding() {
+  unsubscribeAll();
+  state.mode = "solo";
+  state.roomId = null;
+  state.pendingRoomId = null;
+  state.participantId = null;
+  state.nickname = null;
+  state.isHost = false;
+  state.targetCount = null;
+  state.participantsCache = [];
+  if (location.search) history.replaceState(null, "", location.pathname);
+  showScreen("landing");
+}
+
 document.getElementById("btn-solo").addEventListener("click", startSolo);
-document.getElementById("btn-group").addEventListener("click", () => {
-  alert("같이 먹기 기능은 준비 중이에요!");
-});
+document.getElementById("btn-group").addEventListener("click", enterRoomCreateScreen);
 document.getElementById("btn-back").addEventListener("click", goBack);
 document.getElementById("btn-retry").addEventListener("click", retry);
 document.getElementById("btn-restart").addEventListener("click", restart);
+
+document.getElementById("btn-room-create-back").addEventListener("click", exitGroupModeToLanding);
+
+document.getElementById("btn-create-room").addEventListener("click", async () => {
+  const baseNickname = document.getElementById("room-nickname").value.trim();
+  if (!baseNickname) {
+    showRoomCreateError("닉네임을 입력해주세요.");
+    return;
+  }
+  document.getElementById("room-create-error").style.display = "none";
+
+  const { roomId } = await createRoom(baseNickname, state.roomFormTargetCount);
+  subscribeToRoom(roomId);
+
+  document.getElementById("invite-code").textContent = roomId;
+  document.getElementById("room-create-form").hidden = true;
+  document.getElementById("room-create-invite").hidden = false;
+});
+
+document.getElementById("btn-copy-invite").addEventListener("click", async () => {
+  const link = inviteLinkFor(state.roomId);
+  try {
+    await navigator.clipboard.writeText(link);
+  } catch (err) {
+    window.prompt("아래 링크를 복사하세요", link);
+  }
+});
+
+document.getElementById("btn-host-start-quiz").addEventListener("click", startGroupSteps);
+
+document.getElementById("btn-join-back").addEventListener("click", exitGroupModeToLanding);
+
+document.getElementById("btn-join-room").addEventListener("click", async () => {
+  const baseNickname = document.getElementById("join-nickname").value.trim();
+  if (!baseNickname) return;
+
+  const roomId = state.pendingRoomId;
+  const status = await checkRoomStatus(roomId);
+  if (!status.ok) {
+    showJoinError(status.reason);
+    return;
+  }
+
+  await joinRoom(roomId, baseNickname);
+  subscribeToRoom(roomId);
+  startGroupSteps();
+});
+
+document.getElementById("btn-group-restart").addEventListener("click", exitGroupModeToLanding);
+
+const urlRoomId = new URLSearchParams(location.search).get("room");
+if (urlRoomId) {
+  enterJoinFlow(urlRoomId.toUpperCase());
+}

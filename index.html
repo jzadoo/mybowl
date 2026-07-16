@@ -95,8 +95,86 @@
     </div>
   </section>
 
+  <!-- 같이 먹기 - 방 만들기 -->
+  <section class="screen screen--yellow" id="screen-room-create">
+    <span class="deco deco--star deco--blue" style="top:6%;left:8%;transform:rotate(-12deg) scale(0.7);"></span>
+    <span class="deco deco--star deco--red" style="bottom:10%;right:10%;transform:rotate(10deg) scale(0.6);"></span>
+
+    <p class="kicker">같이 먹기</p>
+    <h2 class="step-title">방을 만들어요</h2>
+
+    <div id="room-create-form">
+      <input class="text-input" id="room-nickname" type="text" placeholder="닉네임을 입력하세요" maxlength="20" />
+      <p class="subtitle">몇 명이서 같이 담을까요?</p>
+      <div class="options" id="room-count-options"></div>
+      <p class="join-error" id="room-create-error" style="display:none;"></p>
+      <div class="result__actions">
+        <button class="btn btn--primary" id="btn-create-room">방 만들기</button>
+        <button class="btn btn--text" id="btn-room-create-back">이전으로</button>
+      </div>
+    </div>
+
+    <div id="room-create-invite" hidden>
+      <div class="result-card">
+        <p class="invite-code" id="invite-code">ABC123</p>
+        <p class="result-desc">이 코드나 링크를 친구에게 공유하세요</p>
+      </div>
+      <div class="result__actions">
+        <button class="btn btn--ghost" id="btn-copy-invite">링크 복사하기</button>
+        <button class="btn btn--primary" id="btn-host-start-quiz">그릇 채우기 시작</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 같이 먹기 - 참여 -->
+  <section class="screen screen--yellow" id="screen-join">
+    <span class="deco deco--star deco--magenta" style="top:6%;left:8%;transform:rotate(-12deg) scale(0.7);"></span>
+    <span class="deco deco--star deco--ink" style="bottom:10%;right:10%;transform:rotate(10deg) scale(0.6);"></span>
+
+    <p class="kicker">같이 먹기</p>
+    <h2 class="step-title" id="join-title">방에 참여해요</h2>
+    <p class="join-error" id="join-error" style="display:none;"></p>
+    <input class="text-input" id="join-nickname" type="text" placeholder="닉네임을 입력하세요" maxlength="20" />
+    <div class="result__actions">
+      <button class="btn btn--primary" id="btn-join-room">참여하기</button>
+      <button class="btn btn--text" id="btn-join-back">이전으로</button>
+    </div>
+  </section>
+
+  <!-- 같이 먹기 - 대기 -->
+  <section class="screen screen--ink" id="screen-waiting">
+    <span class="deco deco--star deco--yellow" style="top:10%;left:10%;transform:rotate(-15deg) scale(0.7);"></span>
+    <span class="deco deco--star deco--blue" style="bottom:10%;right:10%;transform:rotate(12deg) scale(0.6);"></span>
+
+    <div class="bowl bowl--idle">
+      <div class="bowl__body">🥣</div>
+    </div>
+    <p class="kicker kicker--light" id="waiting-kicker">0/0명 담는 중</p>
+    <h2 class="step-title step-title--light">다른 사람들을 기다리는 중...</h2>
+    <div class="progress" id="waiting-progress"></div>
+    <div class="waiting-roster" id="waiting-roster"></div>
+  </section>
+
+  <!-- 같이 먹기 - 그룹 결과 -->
+  <section class="screen screen--yellow" id="screen-group-result">
+    <span class="deco deco--star deco--blue" style="top:6%;left:6%;transform:rotate(-10deg) scale(0.6);"></span>
+    <span class="deco deco--star deco--ink" style="top:8%;right:8%;transform:rotate(16deg) scale(0.5);"></span>
+    <span class="deco deco--star deco--red" style="bottom:8%;left:10%;transform:rotate(12deg) scale(0.55);"></span>
+
+    <p class="kicker">모두의 오늘 메뉴</p>
+    <div class="result-card">
+      <div class="result-emoji" id="group-result-emoji">🍲</div>
+      <h2 class="result-name" id="group-result-name">김치찌개</h2>
+      <p class="result-desc" id="group-result-desc"></p>
+    </div>
+    <div class="result__actions">
+      <a class="btn btn--primary" id="btn-group-map" href="#" target="_blank" rel="noopener">내 주변에서 찾아보기</a>
+      <button class="btn btn--text" id="btn-group-restart">처음부터</button>
+    </div>
+  </section>
+
 </div>
 
-<script src="script.js"></script>
+<script type="module" src="script.js"></script>
 </body>
 </html>
