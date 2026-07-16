@@ -42,6 +42,7 @@ body:has(#screen-landing[data-active="true"]) { background: var(--yellow); }
 body:has(#screen-steps[data-active="true"]) { background: var(--cream); }
 body:has(#screen-complete[data-active="true"]) { background: var(--ink); }
 body:has(#screen-result[data-active="true"]) { background: var(--yellow); }
+body:has(#screen-group-entry[data-active="true"]) { background: var(--yellow); }
 body:has(#screen-room-create[data-active="true"]) { background: var(--yellow); }
 body:has(#screen-join[data-active="true"]) { background: var(--yellow); }
 body:has(#screen-waiting[data-active="true"]) { background: var(--ink); }
@@ -183,6 +184,10 @@ body::after {
 
 .kicker--light {
   color: var(--yellow);
+}
+
+.kicker--result {
+  font-size: clamp(18px, 4.5vw, 22px);
 }
 
 .title {
@@ -528,6 +533,13 @@ body::after {
   width: 100%;
 }
 
+/* 같이 먹기 — 방장 화면이 .screen 플렉스 자식으로서 콘텐츠 크기로 줄어드는 것을 막아
+   내부 .text-input의 width:100%가 화면 전체 폭 기준으로 계산되게 한다 (참여 화면과 폭 통일) */
+#room-create-form,
+#room-create-invite {
+  width: 100%;
+}
+
 /* 같이 먹기 — 닉네임/방코드 입력 */
 .text-input {
   width: 100%;
@@ -548,9 +560,13 @@ body::after {
   box-shadow: 0 0 0 3px var(--blue);
 }
 
-/* 같이 먹기 — 초대 코드 */
+#room-nickname {
+  margin-bottom: 36px;
+}
+
+/* 같이 먹기 — 초대 코드: 스타일화된 폰트는 가독성이 떨어져 모노스페이스로 전환 */
 .invite-code {
-  font-family: var(--font-display);
+  font-family: ui-monospace, "SF Mono", "Consolas", monospace;
   font-size: clamp(32px, 8vw, 44px);
   letter-spacing: 0.15em;
   color: var(--blue);
@@ -565,7 +581,7 @@ body::after {
   margin: -8px 0 16px;
 }
 
-/* 같이 먹기 — 대기 화면 참여자 목록 */
+/* 같이 먹기 — 대기/로비 화면 참여자 목록 (밝은/어두운 배경 양쪽에서 재사용) */
 .waiting-roster {
   display: flex;
   flex-direction: column;
@@ -577,6 +593,11 @@ body::after {
 .waiting-roster__item {
   font-family: var(--font-body);
   font-size: clamp(14px, 3.2vw, 16px);
-  color: var(--yellow);
+  color: var(--ink);
   margin: 0;
+}
+
+/* 어두운 대기 화면에서만 밝은 글씨로 — 방장 로비(밝은 배경)와 색을 분리 */
+#screen-waiting .waiting-roster__item {
+  color: var(--yellow);
 }
